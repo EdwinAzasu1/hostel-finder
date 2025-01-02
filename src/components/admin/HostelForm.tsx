@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import type { Hostel } from "./HostelList"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -41,23 +42,24 @@ const formSchema = z.object({
   description: z.string().optional(),
 })
 
-export function HostelForm() {
+interface HostelFormProps {
+  initialData?: Hostel | null
+  onSubmit: (values: z.infer<typeof formSchema>) => void
+  onCancel: () => void
+}
+
+export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      price: "",
-      roomType: "",
-      ownerName: "",
-      ownerContact: "",
-      description: "",
+      name: initialData?.name || "",
+      price: initialData?.price || "",
+      roomType: initialData?.roomType || "",
+      ownerName: initialData?.ownerName || "",
+      ownerContact: initialData?.ownerContact || "",
+      description: initialData?.description || "",
     },
   })
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    // TODO: Handle form submission
-  }
 
   return (
     <Form {...form}>
@@ -167,8 +169,10 @@ export function HostelForm() {
         />
 
         <div className="flex gap-4">
-          <Button type="submit">Submit</Button>
-          <Button type="button" variant="outline">
+          <Button type="submit">
+            {initialData ? "Update Hostel" : "Add Hostel"}
+          </Button>
+          <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
         </div>
