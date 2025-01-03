@@ -1,18 +1,17 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import SearchFilters from "@/components/SearchFilters";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Button } from "@/components/ui/button";
-import { LogIn, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+import SearchFilters from "@/components/SearchFilters";
+import { Header } from "@/components/Header";
+import { HostelCard } from "@/components/HostelCard";
+import { AdminLoginModal } from "@/components/AdminLoginModal";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -21,45 +20,21 @@ const Index = () => {
     if (max) setMaxPrice(max);
   };
 
-  const handleAdminLogin = async () => {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Please sign in first",
-          variant: "destructive",
-        });
-        return;
-      }
+  const handleAdminLoginSuccess = () => {
+    setIsAdminModalOpen(false);
+    toast({
+      title: "Success",
+      description: "Redirecting to admin dashboard...",
+    });
+    navigate("/admin");
+  };
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.is_admin) {
-        toast({
-          title: "Success",
-          description: "Redirecting to admin dashboard...",
-        });
-        navigate("/admin");
-      } else {
-        toast({
-          title: "Access Denied",
-          description: "You don't have admin privileges",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred",
-        variant: "destructive",
-      });
-    }
+  const handleAdminLoginError = (message: string) => {
+    toast({
+      title: "Error",
+      description: message,
+      variant: "destructive",
+    });
   };
 
   const filteredHostels = mockHostels.filter((hostel) => {
@@ -80,34 +55,10 @@ const Index = () => {
     }
   };
 
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 dark:from-background dark:to-secondary/10">
       <div className="container mx-auto px-4 py-8">
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center mb-8"
-        >
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Central University Hostel Finder
-          </h1>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-              onClick={handleAdminLogin}
-            >
-              <Shield className="w-4 h-4" />
-              Admin Login
-            </Button>
-            <ThemeToggle />
-          </div>
-        </motion.div>
+        <Header onAdminClick={() => setIsAdminModalOpen(true)} />
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -126,45 +77,18 @@ const Index = () => {
           animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {filteredHostels.map((hostel, index) => (
-            <motion.div
-              key={hostel.id}
-              variants={item}
-              whileHover={{ 
-                scale: 1.03,
-                transition: { duration: 0.2 }
-              }}
-            >
-              <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 bg-card/50 backdrop-blur-sm border-2 border-transparent hover:border-primary/20">
-                <div className="aspect-video relative overflow-hidden">
-                  <img
-                    src={`${hostel.thumbnail}?w=600&h=400&fit=crop`}
-                    alt={hostel.name}
-                    className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-                <CardHeader>
-                  <CardTitle className="group-hover:text-primary transition-colors duration-300">
-                    {hostel.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center">
-                    <p className="text-lg font-semibold text-primary">
-                      GH₵ {hostel.price}
-                      <span className="text-sm text-muted-foreground">/year</span>
-                    </p>
-                    <p className="text-sm px-3 py-1 rounded-full bg-secondary">
-                      {hostel.availableRooms} rooms available
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+          {filteredHostels.map((hostel) => (
+            <HostelCard key={hostel.id} hostel={hostel} />
           ))}
         </motion.div>
       </div>
+
+      <AdminLoginModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onLoginSuccess={handleAdminLoginSuccess}
+        onLoginError={handleAdminLoginError}
+      />
     </div>
   );
 };
