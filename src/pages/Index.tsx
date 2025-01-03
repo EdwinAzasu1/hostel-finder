@@ -7,6 +7,7 @@ import { LogIn, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,6 +21,47 @@ const Index = () => {
     if (max) setMaxPrice(max);
   };
 
+  const handleAdminLogin = async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Please sign in first",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.is_admin) {
+        toast({
+          title: "Success",
+          description: "Redirecting to admin dashboard...",
+        });
+        navigate("/admin");
+      } else {
+        toast({
+          title: "Access Denied",
+          description: "You don't have admin privileges",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredHostels = mockHostels.filter((hostel) => {
     const matchesSearch = hostel.name.toLowerCase().includes(searchQuery.toLowerCase());
     const price = parseInt(hostel.price.replace(",", ""));
@@ -27,14 +69,6 @@ const Index = () => {
     const matchesMaxPrice = !maxPrice || price <= parseInt(maxPrice);
     return matchesSearch && matchesMinPrice && matchesMaxPrice;
   });
-
-  const handleAdminLogin = () => {
-    toast({
-      title: "Admin Login",
-      description: "Redirecting to admin dashboard...",
-    });
-    navigate("/admin");
-  };
 
   const container = {
     hidden: { opacity: 0 },
@@ -52,7 +86,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 dark:from-background dark:to-secondary/10">
       <div className="container mx-auto px-4 py-8">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
