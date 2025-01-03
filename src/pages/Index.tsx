@@ -15,6 +15,11 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const handlePriceRangeChange = (min: string, max: string) => {
+    if (min) setMinPrice(min);
+    if (max) setMaxPrice(max);
+  };
+
   const filteredHostels = mockHostels.filter((hostel) => {
     const matchesSearch = hostel.name.toLowerCase().includes(searchQuery.toLowerCase());
     const price = parseInt(hostel.price.replace(",", ""));
@@ -28,7 +33,6 @@ const Index = () => {
       title: "Admin Login",
       description: "Redirecting to admin dashboard...",
     });
-    // TODO: Implement actual admin authentication
     navigate("/admin");
   };
 
