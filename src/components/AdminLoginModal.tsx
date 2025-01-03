@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,28 +33,41 @@ export const AdminLoginModal = ({
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
 
-      if (data.user) {
-        const { data: profile } = await supabase
+      if (authData.user) {
+        // First check if profile exists, if not create it
+        const { data: existingProfile } = await supabase
           .from('profiles')
           .select('is_admin')
-          .eq('id', data.user.id)
-          .single();
+          .eq('id', authData.user.id)
+          .maybeSingle();
 
-        if (profile?.is_admin) {
+        if (!existingProfile) {
+          // Create profile if it doesn't exist
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{ id: authData.user.id, is_admin: false }]);
+
+          if (profileError) throw profileError;
+          onLoginError("You don't have admin privileges");
+          return;
+        }
+
+        if (existingProfile?.is_admin) {
           onLoginSuccess();
         } else {
           onLoginError("You don't have admin privileges");
         }
       }
-    } catch (error) {
-      onLoginError("Invalid credentials");
+    } catch (error: any) {
+      console.error('Login error:', error);
+      onLoginError(error.message || "Invalid credentials");
     } finally {
       setLoading(false);
       setEmail("");
@@ -66,6 +80,9 @@ export const AdminLoginModal = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Admin Login</DialogTitle>
+          <DialogDescription>
+            Enter your credentials to access the admin dashboard.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
