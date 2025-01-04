@@ -36,14 +36,16 @@ const formSchema = z.object({
   description: z.string().optional(),
 })
 
+type FormValues = z.infer<typeof formSchema>
+
 interface HostelFormProps {
   initialData?: Hostel | null
-  onSubmit: (values: z.infer<typeof formSchema>) => void
+  onSubmit: (values: FormValues) => void
   onCancel: () => void
 }
 
 export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: initialData?.name || "",

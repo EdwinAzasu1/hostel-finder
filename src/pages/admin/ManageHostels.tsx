@@ -74,7 +74,14 @@ export default function ManageHostels() {
     return data.publicUrl
   }
 
-  const handleSubmit = async (values: Omit<Hostel, "id">) => {
+  const handleSubmit = async (values: {
+    name: string
+    description?: string
+    price: string
+    roomType: Hostel["roomType"]
+    ownerName: string
+    ownerContact: string
+  }) => {
     try {
       let thumbnailUrl = null
       if (selectedImages.length > 0) {
