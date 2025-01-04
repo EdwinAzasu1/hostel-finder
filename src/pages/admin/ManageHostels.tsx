@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { HostelForm } from "@/components/admin/HostelForm"
 import { ImageUpload } from "@/components/admin/ImageUpload"
 import { HostelList, type Hostel } from "@/components/admin/HostelList"
@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 export default function ManageHostels() {
   const [hostels, setHostels] = useState<Hostel[]>([])
@@ -20,50 +21,136 @@ export default function ManageHostels() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const { toast } = useToast()
 
+  useEffect(() => {
+    fetchHostels()
+  }, [])
+
+  const fetchHostels = async () => {
+    const { data, error } = await supabase
+      .from("hostels")
+      .select("*")
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch hostels",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setHostels(
+      data.map((hostel) => ({
+        ...hostel,
+        price: hostel.price.toString(),
+        roomType: hostel.room_type,
+        ownerName: hostel.owner_name,
+        ownerContact: hostel.owner_contact,
+      }))
+    )
+  }
+
   const handleImagesSelected = (files: File[]) => {
     setSelectedImages(files)
   }
 
-  const handleSubmit = (values: Omit<Hostel, "id">) => {
-    if (editingHostel) {
-      // Update existing hostel
-      setHostels((prev) =>
-        prev.map((hostel) =>
-          hostel.id === editingHostel.id
-            ? { ...values, id: hostel.id, images: selectedImages }
-            : hostel
-        )
-      )
-      toast({
-        title: "Hostel updated",
-        description: "The hostel has been successfully updated.",
-      })
-    } else {
-      // Add new hostel
-      const newHostel = {
-        ...values,
-        id: crypto.randomUUID(),
-        images: selectedImages,
+  const uploadImage = async (file: File) => {
+    const fileExt = file.name.split(".").pop()
+    const filePath = `${crypto.randomUUID()}.${fileExt}`
+
+    const { error: uploadError } = await supabase.storage
+      .from("hostel_images")
+      .upload(filePath, file)
+
+    if (uploadError) {
+      throw uploadError
+    }
+
+    const { data } = supabase.storage
+      .from("hostel_images")
+      .getPublicUrl(filePath)
+
+    return data.publicUrl
+  }
+
+  const handleSubmit = async (values: Omit<Hostel, "id">) => {
+    try {
+      let thumbnailUrl = null
+      if (selectedImages.length > 0) {
+        thumbnailUrl = await uploadImage(selectedImages[0])
       }
-      setHostels((prev) => [...prev, newHostel])
+
+      const hostelData = {
+        name: values.name,
+        description: values.description,
+        price: parseFloat(values.price),
+        room_type: values.roomType,
+        owner_name: values.ownerName,
+        owner_contact: values.ownerContact,
+        ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
+      }
+
+      if (editingHostel) {
+        const { error } = await supabase
+          .from("hostels")
+          .update(hostelData)
+          .eq("id", editingHostel.id)
+
+        if (error) throw error
+
+        toast({
+          title: "Success",
+          description: "Hostel updated successfully",
+        })
+      } else {
+        const { error } = await supabase.from("hostels").insert([hostelData])
+
+        if (error) throw error
+
+        toast({
+          title: "Success",
+          description: "New hostel added successfully",
+        })
+      }
+
+      setIsDialogOpen(false)
+      setEditingHostel(null)
+      setSelectedImages([])
+      fetchHostels()
+    } catch (error) {
       toast({
-        title: "Hostel added",
-        description: "The new hostel has been successfully added.",
+        title: "Error",
+        description: "Failed to save hostel",
+        variant: "destructive",
       })
     }
-    setIsDialogOpen(false)
-    setEditingHostel(null)
-    setSelectedImages([])
   }
 
   const handleEdit = (hostel: Hostel) => {
     setEditingHostel(hostel)
-    setSelectedImages(hostel.images || [])
+    setSelectedImages([])
     setIsDialogOpen(true)
   }
 
-  const handleDelete = (id: string) => {
-    setHostels((prev) => prev.filter((hostel) => hostel.id !== id))
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from("hostels").delete().eq("id", id)
+
+      if (error) throw error
+
+      setHostels((prev) => prev.filter((hostel) => hostel.id !== id))
+      toast({
+        title: "Success",
+        description: "Hostel deleted successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete hostel",
+        variant: "destructive",
+      })
+    }
   }
 
   return (

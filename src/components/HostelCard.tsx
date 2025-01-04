@@ -1,14 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { motion } from "framer-motion"
 
 interface HostelCardProps {
   hostel: {
-    id: number;
-    name: string;
-    price: string;
-    availableRooms: number;
-    thumbnail: string;
-  };
+    id: number
+    name: string
+    price: string
+    availableRooms: number
+    thumbnail: string
+  }
 }
 
 export const HostelCard = ({ hostel }: HostelCardProps) => {
@@ -22,7 +22,7 @@ export const HostelCard = ({ hostel }: HostelCardProps) => {
       <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 bg-card/50 backdrop-blur-sm border-2 border-transparent hover:border-primary/20">
         <div className="aspect-video relative overflow-hidden">
           <img
-            src={`${hostel.thumbnail}?w=600&h=400&fit=crop`}
+            src={hostel.thumbnail || "/placeholder.svg"}
             alt={hostel.name}
             className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-300"
           />
@@ -46,5 +46,5 @@ export const HostelCard = ({ hostel }: HostelCardProps) => {
         </CardContent>
       </Card>
     </motion.div>
-  );
-};
+  )
+}
