@@ -13,14 +13,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { HostelTypeSelect, hostelTypes } from "./HostelTypeSelect"
 import type { Hostel } from "./HostelList"
 
 const formSchema = z.object({
@@ -30,7 +24,7 @@ const formSchema = z.object({
   price: z.string().min(1, {
     message: "Price is required.",
   }),
-  roomType: z.string({
+  roomType: z.enum(hostelTypes, {
     required_error: "Please select a room type.",
   }),
   ownerName: z.string().min(2, {
@@ -54,7 +48,7 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
     defaultValues: {
       name: initialData?.name || "",
       price: initialData?.price || "",
-      roomType: initialData?.roomType || "",
+      roomType: initialData?.roomType || "single",
       ownerName: initialData?.ownerName || "",
       ownerContact: initialData?.ownerContact || "",
       description: initialData?.description || "",
@@ -63,7 +57,7 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -99,28 +93,7 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="roomType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Room Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select room type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="double">Double</SelectItem>
-                  <SelectItem value="suite">Suite</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <HostelTypeSelect form={form} />
 
         <FormField
           control={form.control}
@@ -159,7 +132,7 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
               <FormControl>
                 <Textarea
                   placeholder="Enter hostel description"
-                  className="resize-none"
+                  className="resize-none h-20"
                   {...field}
                 />
               </FormControl>

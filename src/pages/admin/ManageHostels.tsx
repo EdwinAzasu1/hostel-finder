@@ -127,32 +127,6 @@ export default function ManageHostels() {
     }
   }
 
-  const handleEdit = (hostel: Hostel) => {
-    setEditingHostel(hostel)
-    setSelectedImages([])
-    setIsDialogOpen(true)
-  }
-
-  const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase.from("hostels").delete().eq("id", id)
-
-      if (error) throw error
-
-      setHostels((prev) => prev.filter((hostel) => hostel.id !== id))
-      toast({
-        title: "Success",
-        description: "Hostel deleted successfully",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete hostel",
-        variant: "destructive",
-      })
-    }
-  }
-
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
@@ -163,16 +137,16 @@ export default function ManageHostels() {
               <Plus className="mr-2 h-4 w-4" /> Add New Hostel
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
                 {editingHostel ? "Edit Hostel" : "Add New Hostel"}
               </DialogTitle>
             </DialogHeader>
-            <div className="grid gap-6">
+            <div className="grid gap-4">
               <ImageUpload onImagesSelected={handleImagesSelected} />
               {selectedImages.length > 0 && (
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   {selectedImages.map((image, index) => (
                     <div
                       key={index}
@@ -197,17 +171,30 @@ export default function ManageHostels() {
         </Dialog>
       </div>
 
-      {hostels.length > 0 ? (
-        <HostelList
-          hostels={hostels}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      ) : (
-        <div className="text-center text-gray-500 py-8">
-          No hostels added yet. Click the button above to add your first hostel.
-        </div>
-      )}
+      <HostelList
+        hostels={hostels}
+        onEdit={(hostel) => {
+          setEditingHostel(hostel)
+          setIsDialogOpen(true)
+        }}
+        onDelete={async (id) => {
+          try {
+            const { error } = await supabase.from("hostels").delete().eq("id", id)
+            if (error) throw error
+            toast({
+              title: "Success",
+              description: "Hostel deleted successfully",
+            })
+            fetchHostels()
+          } catch (error) {
+            toast({
+              title: "Error",
+              description: "Failed to delete hostel",
+              variant: "destructive",
+            })
+          }
+        }}
+      />
     </div>
   )
 }
