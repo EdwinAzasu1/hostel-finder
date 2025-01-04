@@ -11,127 +11,21 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/integrations/supabase/client"
+import { useHostelOperations } from "@/components/admin/useHostelOperations"
 
 export default function ManageHostels() {
-  const [hostels, setHostels] = useState<Hostel[]>([])
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [editingHostel, setEditingHostel] = useState<Hostel | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const { toast } = useToast()
+  const { hostels, fetchHostels, handleSubmit, deleteHostel } =
+    useHostelOperations()
 
   useEffect(() => {
     fetchHostels()
   }, [])
 
-  const fetchHostels = async () => {
-    const { data, error } = await supabase
-      .from("hostels")
-      .select("*")
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch hostels",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setHostels(
-      data.map((hostel) => ({
-        ...hostel,
-        price: hostel.price.toString(),
-        roomType: hostel.room_type,
-        ownerName: hostel.owner_name,
-        ownerContact: hostel.owner_contact,
-      }))
-    )
-  }
-
   const handleImagesSelected = (files: File[]) => {
     setSelectedImages(files)
-  }
-
-  const uploadImage = async (file: File) => {
-    const fileExt = file.name.split(".").pop()
-    const filePath = `${crypto.randomUUID()}.${fileExt}`
-
-    const { error: uploadError } = await supabase.storage
-      .from("hostel_images")
-      .upload(filePath, file)
-
-    if (uploadError) {
-      throw uploadError
-    }
-
-    const { data } = supabase.storage
-      .from("hostel_images")
-      .getPublicUrl(filePath)
-
-    return data.publicUrl
-  }
-
-  const handleSubmit = async (values: {
-    name: string
-    description?: string
-    price: string
-    roomType: Hostel["roomType"]
-    ownerName: string
-    ownerContact: string
-  }) => {
-    try {
-      let thumbnailUrl = null
-      if (selectedImages.length > 0) {
-        thumbnailUrl = await uploadImage(selectedImages[0])
-      }
-
-      const hostelData = {
-        name: values.name,
-        description: values.description,
-        price: parseFloat(values.price),
-        room_type: values.roomType,
-        owner_name: values.ownerName,
-        owner_contact: values.ownerContact,
-        ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
-      }
-
-      if (editingHostel) {
-        const { error } = await supabase
-          .from("hostels")
-          .update(hostelData)
-          .eq("id", editingHostel.id)
-
-        if (error) throw error
-
-        toast({
-          title: "Success",
-          description: "Hostel updated successfully",
-        })
-      } else {
-        const { error } = await supabase.from("hostels").insert([hostelData])
-
-        if (error) throw error
-
-        toast({
-          title: "Success",
-          description: "New hostel added successfully",
-        })
-      }
-
-      setIsDialogOpen(false)
-      setEditingHostel(null)
-      setSelectedImages([])
-      fetchHostels()
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save hostel",
-        variant: "destructive",
-      })
-    }
   }
 
   return (
@@ -170,7 +64,18 @@ export default function ManageHostels() {
               )}
               <HostelForm
                 initialData={editingHostel}
-                onSubmit={handleSubmit}
+                onSubmit={async (values) => {
+                  const success = await handleSubmit(
+                    values,
+                    selectedImages,
+                    editingHostel
+                  )
+                  if (success) {
+                    setIsDialogOpen(false)
+                    setEditingHostel(null)
+                    setSelectedImages([])
+                  }
+                }}
                 onCancel={() => setIsDialogOpen(false)}
               />
             </div>
@@ -184,23 +89,7 @@ export default function ManageHostels() {
           setEditingHostel(hostel)
           setIsDialogOpen(true)
         }}
-        onDelete={async (id) => {
-          try {
-            const { error } = await supabase.from("hostels").delete().eq("id", id)
-            if (error) throw error
-            toast({
-              title: "Success",
-              description: "Hostel deleted successfully",
-            })
-            fetchHostels()
-          } catch (error) {
-            toast({
-              title: "Error",
-              description: "Failed to delete hostel",
-              variant: "destructive",
-            })
-          }
-        }}
+        onDelete={deleteHostel}
       />
     </div>
   )

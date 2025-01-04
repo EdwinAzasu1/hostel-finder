@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 import { HostelTypeSelect, hostelTypes } from "./HostelTypeSelect"
-import type { Hostel } from "./HostelList"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -36,16 +35,23 @@ const formSchema = z.object({
   description: z.string().optional(),
 })
 
-type FormValues = z.infer<typeof formSchema>
+export type HostelFormValues = z.infer<typeof formSchema>
 
 interface HostelFormProps {
-  initialData?: Hostel | null
-  onSubmit: (values: FormValues) => void
+  initialData?: {
+    name: string
+    price: string
+    roomType: typeof hostelTypes[number]
+    ownerName: string
+    ownerContact: string
+    description?: string
+  } | null
+  onSubmit: (values: HostelFormValues) => void
   onCancel: () => void
 }
 
 export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps) {
-  const form = useForm<FormValues>({
+  const form = useForm<HostelFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: initialData?.name || "",
