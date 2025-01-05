@@ -63,20 +63,10 @@ export default function ManageHostels() {
                 </div>
               )}
               <HostelForm
-                initialData={
-                  editingHostel
-                    ? {
-                        ...editingHostel,
-                        roomTypes: [editingHostel.roomType],
-                      }
-                    : null
-                }
+                initialData={editingHostel}
                 onSubmit={async (values) => {
                   const success = await handleSubmit(
-                    {
-                      ...values,
-                      roomType: values.roomTypes[0],
-                    },
+                    values,
                     selectedImages,
                     editingHostel
                   )

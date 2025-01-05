@@ -1,3 +1,5 @@
+import { HostelType } from "@/components/admin/HostelTypeSelect"
+
 export type HostelRoomType = {
   id: string
   hostel_id: string | null
@@ -16,4 +18,5 @@ export type Hostel = {
   thumbnail: string | null
   created_at: string
   updated_at: string
+  roomTypes?: HostelType[]
 }
