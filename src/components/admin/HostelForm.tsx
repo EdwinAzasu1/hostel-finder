@@ -23,8 +23,8 @@ const formSchema = z.object({
   price: z.string().min(1, {
     message: "Price is required.",
   }),
-  roomType: z.enum(hostelTypes, {
-    required_error: "Please select a room type.",
+  roomTypes: z.array(z.enum(hostelTypes)).min(1, {
+    message: "Select at least one room type.",
   }),
   ownerName: z.string().min(2, {
     message: "Owner name is required.",
@@ -41,7 +41,7 @@ interface HostelFormProps {
   initialData?: {
     name: string
     price: string
-    roomType: typeof hostelTypes[number]
+    roomTypes: typeof hostelTypes[number][]
     ownerName: string
     ownerContact: string
     description?: string
@@ -56,7 +56,7 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
     defaultValues: {
       name: initialData?.name || "",
       price: initialData?.price || "",
-      roomType: initialData?.roomType || "single",
+      roomTypes: initialData?.roomTypes || [],
       ownerName: initialData?.ownerName || "",
       ownerContact: initialData?.ownerContact || "",
       description: initialData?.description || "",

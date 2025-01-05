@@ -38,13 +38,13 @@ export default function ManageHostels() {
               <Plus className="mr-2 h-4 w-4" /> Add New Hostel
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>
                 {editingHostel ? "Edit Hostel" : "Add New Hostel"}
               </DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4">
+            <div className="grid gap-4 max-h-[80vh] overflow-y-auto">
               <ImageUpload onImagesSelected={handleImagesSelected} />
               {selectedImages.length > 0 && (
                 <div className="grid grid-cols-2 gap-2">
@@ -63,10 +63,20 @@ export default function ManageHostels() {
                 </div>
               )}
               <HostelForm
-                initialData={editingHostel}
+                initialData={
+                  editingHostel
+                    ? {
+                        ...editingHostel,
+                        roomTypes: [editingHostel.roomType],
+                      }
+                    : null
+                }
                 onSubmit={async (values) => {
                   const success = await handleSubmit(
-                    values,
+                    {
+                      ...values,
+                      roomType: values.roomTypes[0],
+                    },
                     selectedImages,
                     editingHostel
                   )

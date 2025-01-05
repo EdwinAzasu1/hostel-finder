@@ -26,27 +26,39 @@ export const hostelTypes = [
 export type HostelType = (typeof hostelTypes)[number]
 
 export function HostelTypeSelect({ form }: { form: any }) {
+  const selectedTypes = form.watch("roomTypes") || []
+
+  const handleTypeChange = (type: string) => {
+    const currentTypes = form.getValues("roomTypes") || []
+    const newTypes = currentTypes.includes(type)
+      ? currentTypes.filter((t: string) => t !== type)
+      : [...currentTypes, type]
+    form.setValue("roomTypes", newTypes)
+  }
+
   return (
     <FormField
       control={form.control}
-      name="roomType"
+      name="roomTypes"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Room Type</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="Select room type" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {hostelTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FormLabel>Room Types</FormLabel>
+          <div className="flex flex-wrap gap-2">
+            {hostelTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => handleTypeChange(type)}
+                className={`px-3 py-1 rounded-md border ${
+                  selectedTypes.includes(type)
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background"
+                }`}
+              >
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
           <FormMessage />
         </FormItem>
       )}
