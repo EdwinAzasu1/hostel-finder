@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
@@ -15,6 +15,9 @@ interface Hostel {
   price: number;
   available_rooms: number;
   thumbnail: string | null;
+  description: string | null;
+  owner_name: string;
+  owner_contact: string;
 }
 
 const Index = () => {
@@ -124,7 +127,10 @@ const Index = () => {
                 name: hostel.name,
                 price: hostel.price.toString(),
                 availableRooms: hostel.available_rooms,
-                thumbnail: hostel.thumbnail || "/placeholder.svg"
+                thumbnail: hostel.thumbnail || "/placeholder.svg",
+                description: hostel.description || undefined,
+                ownerName: hostel.owner_name,
+                ownerContact: hostel.owner_contact
               }} 
             />
           ))}
