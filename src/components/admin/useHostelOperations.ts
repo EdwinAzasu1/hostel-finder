@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import type { HostelFormValues } from "./HostelForm"
 import type { Hostel } from "./HostelList"
+import { HostelType } from "./HostelTypeSelect"
 
 export function useHostelOperations() {
   const [hostels, setHostels] = useState<Hostel[]>([])
@@ -27,7 +28,7 @@ export function useHostelOperations() {
       data.map((hostel) => ({
         ...hostel,
         price: hostel.price.toString(),
-        roomType: hostel.room_type,
+        roomType: hostel.room_type as HostelType,
         ownerName: hostel.owner_name,
         ownerContact: hostel.owner_contact,
       }))

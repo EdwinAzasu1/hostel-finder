@@ -10,12 +10,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { HostelType } from "./HostelTypeSelect"
 
 export interface Hostel {
   id: string
   name: string
   price: string
-  roomType: string
+  roomType: HostelType
   ownerName: string
   ownerContact: string
   description?: string
