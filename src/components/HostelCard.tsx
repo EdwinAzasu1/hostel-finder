@@ -15,6 +15,7 @@ interface HostelCardProps {
     description?: string;
     ownerName?: string;
     ownerContact?: string;
+    roomTypes?: string[];
   };
 }
 

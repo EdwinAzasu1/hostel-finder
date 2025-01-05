@@ -4,6 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface HostelDetailsModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface HostelDetailsModalProps {
     description?: string;
     ownerName?: string;
     ownerContact?: string;
+    roomTypes?: string[];
   };
 }
 
@@ -44,14 +46,26 @@ export const HostelDetailsModal = ({
                 GH₵ {hostel.price}
                 <span className="text-sm text-muted-foreground">/year</span>
               </p>
-              <span className="px-4 py-2 rounded-full bg-secondary">
+              <Badge variant="secondary" className="text-base px-4 py-1">
                 {hostel.availableRooms} rooms available
-              </span>
+              </Badge>
             </div>
             {hostel.description && (
               <div>
                 <h3 className="font-semibold mb-2">Description</h3>
                 <p className="text-muted-foreground">{hostel.description}</p>
+              </div>
+            )}
+            {hostel.roomTypes && hostel.roomTypes.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Available Room Types</h3>
+                <div className="flex flex-wrap gap-2">
+                  {hostel.roomTypes.map((type) => (
+                    <Badge key={type} variant="outline">
+                      {type}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
             <div className="border rounded-lg p-4 bg-muted/50">
