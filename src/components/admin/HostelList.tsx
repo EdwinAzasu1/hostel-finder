@@ -11,12 +11,13 @@ import { Button } from "@/components/ui/button"
 import { Edit, Trash2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { HostelType } from "./HostelTypeSelect"
+import { Badge } from "@/components/ui/badge"
 
 export interface Hostel {
   id: string
   name: string
   price: string
-  roomType: HostelType
+  roomTypes: HostelType[]
   ownerName: string
   ownerContact: string
   description?: string
@@ -48,7 +49,7 @@ export function HostelList({ hostels, onEdit, onDelete }: HostelListProps) {
         <TableHeader>
           <TableRow>
             <TableHead>Hostel Name</TableHead>
-            <TableHead>Room Type</TableHead>
+            <TableHead>Room Types</TableHead>
             <TableHead>Price (GH₵)</TableHead>
             <TableHead>Owner</TableHead>
             <TableHead>Contact</TableHead>
@@ -59,7 +60,15 @@ export function HostelList({ hostels, onEdit, onDelete }: HostelListProps) {
           {hostels.map((hostel) => (
             <TableRow key={hostel.id}>
               <TableCell className="font-medium">{hostel.name}</TableCell>
-              <TableCell>{hostel.roomType}</TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-1">
+                  {hostel.roomTypes.map((type) => (
+                    <Badge key={type} variant="secondary">
+                      {type}
+                    </Badge>
+                  ))}
+                </div>
+              </TableCell>
               <TableCell>{hostel.price}</TableCell>
               <TableCell>{hostel.ownerName}</TableCell>
               <TableCell>{hostel.ownerContact}</TableCell>

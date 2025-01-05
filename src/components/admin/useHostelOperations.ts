@@ -2,20 +2,20 @@ import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import type { HostelFormValues } from "./HostelForm"
-import type { Hostel } from "./HostelList"
+import type { Hostel } from "@/integrations/supabase/types"
 import { HostelType } from "./HostelTypeSelect"
 
 export function useHostelOperations() {
-  const [hostels, setHostels] = useState<Hostel[]>([])
+  const [hostels, setHostels] = useState<(Hostel & { roomTypes: HostelType[] })[]>([])
   const { toast } = useToast()
 
   const fetchHostels = async () => {
-    const { data, error } = await supabase
+    const { data: hostelsData, error: hostelsError } = await supabase
       .from("hostels")
       .select("*")
       .order("created_at", { ascending: false })
 
-    if (error) {
+    if (hostelsError) {
       toast({
         title: "Error",
         description: "Failed to fetch hostels",
@@ -24,11 +24,32 @@ export function useHostelOperations() {
       return
     }
 
+    // Fetch room types for all hostels
+    const { data: roomTypesData, error: roomTypesError } = await supabase
+      .from("hostel_room_types")
+      .select("*")
+      .in(
+        "hostel_id",
+        hostelsData.map((h) => h.id)
+      )
+
+    if (roomTypesError) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch room types",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Combine hostels with their room types
     setHostels(
-      data.map((hostel) => ({
+      hostelsData.map((hostel) => ({
         ...hostel,
         price: hostel.price.toString(),
-        roomType: hostel.room_type as HostelType,
+        roomTypes: roomTypesData
+          .filter((rt) => rt.hostel_id === hostel.id)
+          .map((rt) => rt.room_type as HostelType),
         ownerName: hostel.owner_name,
         ownerContact: hostel.owner_contact,
       }))
@@ -57,7 +78,7 @@ export function useHostelOperations() {
   const handleSubmit = async (
     values: HostelFormValues,
     selectedImages: File[],
-    editingHostel: Hostel | null
+    editingHostel: (Hostel & { roomTypes: HostelType[] }) | null
   ) => {
     try {
       let thumbnailUrl = null
@@ -69,34 +90,58 @@ export function useHostelOperations() {
         name: values.name,
         description: values.description,
         price: parseFloat(values.price),
-        room_type: values.roomType,
         owner_name: values.ownerName,
         owner_contact: values.ownerContact,
         ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
       }
 
+      let hostelId: string
+
       if (editingHostel) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from("hostels")
           .update(hostelData)
           .eq("id", editingHostel.id)
 
-        if (error) throw error
+        if (updateError) throw updateError
+        hostelId = editingHostel.id
 
-        toast({
-          title: "Success",
-          description: "Hostel updated successfully",
-        })
+        // Delete existing room types
+        const { error: deleteError } = await supabase
+          .from("hostel_room_types")
+          .delete()
+          .eq("hostel_id", editingHostel.id)
+
+        if (deleteError) throw deleteError
       } else {
-        const { error } = await supabase.from("hostels").insert([hostelData])
+        const { data: newHostel, error: insertError } = await supabase
+          .from("hostels")
+          .insert([hostelData])
+          .select()
+          .single()
 
-        if (error) throw error
-
-        toast({
-          title: "Success",
-          description: "New hostel added successfully",
-        })
+        if (insertError) throw insertError
+        hostelId = newHostel.id
       }
+
+      // Insert new room types
+      const roomTypesData = values.roomTypes.map((type) => ({
+        hostel_id: hostelId,
+        room_type: type,
+      }))
+
+      const { error: roomTypesError } = await supabase
+        .from("hostel_room_types")
+        .insert(roomTypesData)
+
+      if (roomTypesError) throw roomTypesError
+
+      toast({
+        title: "Success",
+        description: editingHostel
+          ? "Hostel updated successfully"
+          : "New hostel added successfully",
+      })
 
       await fetchHostels()
       return true

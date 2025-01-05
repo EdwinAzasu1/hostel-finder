@@ -9,6 +9,35 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      hostel_room_types: {
+        Row: {
+          created_at: string
+          hostel_id: string | null
+          id: string
+          room_type: string
+        }
+        Insert: {
+          created_at?: string
+          hostel_id?: string | null
+          id?: string
+          room_type: string
+        }
+        Update: {
+          created_at?: string
+          hostel_id?: string | null
+          id?: string
+          room_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hostel_room_types_hostel_id_fkey"
+            columns: ["hostel_id"]
+            isOneToOne: false
+            referencedRelation: "hostels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hostels: {
         Row: {
           available_rooms: number
@@ -19,7 +48,6 @@ export type Database = {
           owner_contact: string
           owner_name: string
           price: number
-          room_type: string
           thumbnail: string | null
           updated_at: string
         }
@@ -32,7 +60,6 @@ export type Database = {
           owner_contact: string
           owner_name: string
           price: number
-          room_type: string
           thumbnail?: string | null
           updated_at?: string
         }
@@ -45,7 +72,6 @@ export type Database = {
           owner_contact?: string
           owner_name?: string
           price?: number
-          room_type?: string
           thumbnail?: string | null
           updated_at?: string
         }
