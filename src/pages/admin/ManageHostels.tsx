@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { HostelForm } from "@/components/admin/HostelForm"
 import { ImageUpload } from "@/components/admin/ImageUpload"
-import { HostelList, type Hostel } from "@/components/admin/HostelList"
+import { HostelList } from "@/components/admin/HostelList"
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { useHostelOperations } from "@/components/admin/useHostelOperations"
+import { HostelUI } from "@/integrations/supabase/types/hostel"
 
 export default function ManageHostels() {
   const [selectedImages, setSelectedImages] = useState<File[]>([])
-  const [editingHostel, setEditingHostel] = useState<Hostel | null>(null)
+  const [editingHostel, setEditingHostel] = useState<HostelUI | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const { hostels, fetchHostels, handleSubmit, deleteHostel } =
     useHostelOperations()

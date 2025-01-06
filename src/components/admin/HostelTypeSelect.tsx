@@ -39,12 +39,16 @@ export function HostelTypeSelect({ form }: { form: any }) {
     }
   }
 
+  const capitalizeFirstLetter = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  }
+
   return (
     <div className="space-y-4">
       <FormField
         control={form.control}
         name="roomTypes"
-        render={({ field }) => (
+        render={() => (
           <FormItem>
             <FormLabel>Room Types</FormLabel>
             <div className="flex flex-wrap gap-2">
@@ -59,7 +63,7 @@ export function HostelTypeSelect({ form }: { form: any }) {
                       : "bg-background"
                   }`}
                 >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  {capitalizeFirstLetter(type)}
                 </button>
               ))}
             </div>
@@ -80,7 +84,7 @@ export function HostelTypeSelect({ form }: { form: any }) {
                 <FormItem>
                   <div className="flex items-center gap-2">
                     <span className="min-w-[100px] font-medium">
-                      {type.charAt(0).toUpperCase() + type.slice(1)}:
+                      {capitalizeFirstLetter(type)}:
                     </span>
                     <FormControl>
                       <Input

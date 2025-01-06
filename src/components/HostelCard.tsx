@@ -38,7 +38,7 @@ export const HostelCard = ({ hostel }: HostelCardProps) => {
           <CardContent>
             <div className="flex justify-between items-center mb-4">
               <p className="text-lg font-semibold text-primary">
-                GH₵ {hostel.price}
+                GH₵ {Number(hostel.price).toLocaleString()}
                 <span className="text-sm text-muted-foreground">/year</span>
               </p>
               <p className="text-sm px-3 py-1 rounded-full bg-secondary">
@@ -60,7 +60,10 @@ export const HostelCard = ({ hostel }: HostelCardProps) => {
       <HostelDetailsModal
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
-        hostel={hostel}
+        hostel={{
+          ...hostel,
+          price: Number(hostel.price)
+        }}
       />
     </>
   );
