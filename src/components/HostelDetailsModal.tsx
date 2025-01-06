@@ -12,7 +12,7 @@ interface HostelDetailsModalProps {
   onClose: () => void;
   hostel: {
     name: string;
-    price: string;
+    price: number;
     availableRooms: number;
     thumbnail: string;
     description?: string;
@@ -44,7 +44,7 @@ export const HostelDetailsModal = ({
           <div className="grid gap-4">
             <div className="flex justify-between items-center">
               <p className="text-2xl font-bold text-primary">
-                Starting from GH₵ {hostel.price}
+                Starting from GH₵ {hostel.price.toLocaleString()}
                 <span className="text-sm text-muted-foreground">/year</span>
               </p>
               <Badge variant="secondary" className="text-base px-4 py-1">

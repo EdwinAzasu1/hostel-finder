@@ -8,16 +8,10 @@ import { HostelCard } from "@/components/HostelCard";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { Hostel, HostelRoomType } from "@/integrations/supabase/types/hostel";
 
-interface Hostel {
-  id: string;
-  name: string;
-  price: number;
-  available_rooms: number;
-  thumbnail: string | null;
-  description: string | null;
-  owner_name: string;
-  owner_contact: string;
+interface HostelWithRoomTypes extends Omit<Hostel, 'roomTypes'> {
+  roomTypes?: HostelRoomType[];
 }
 
 const Index = () => {
@@ -31,12 +25,13 @@ const Index = () => {
   const { data: hostels = [], isLoading } = useQuery({
     queryKey: ['hostels'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch hostels
+      const { data: hostelsData, error: hostelsError } = await supabase
         .from('hostels')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
+      if (hostelsError) {
         toast({
           title: "Error",
           description: "Failed to fetch hostels",
@@ -45,7 +40,29 @@ const Index = () => {
         return [];
       }
 
-      return data;
+      // Fetch room types for all hostels
+      const { data: roomTypesData, error: roomTypesError } = await supabase
+        .from('hostel_room_types')
+        .select('*')
+        .in(
+          'hostel_id',
+          hostelsData.map((h) => h.id)
+        );
+
+      if (roomTypesError) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch room types",
+          variant: "destructive",
+        });
+        return hostelsData;
+      }
+
+      // Combine hostels with their room types
+      return hostelsData.map((hostel) => ({
+        ...hostel,
+        roomTypes: roomTypesData.filter((rt) => rt.hostel_id === hostel.id),
+      }));
     },
   });
 
@@ -123,14 +140,15 @@ const Index = () => {
             <HostelCard 
               key={hostel.id} 
               hostel={{
-                id: parseInt(hostel.id),
+                id: hostel.id,
                 name: hostel.name,
-                price: hostel.price.toString(),
+                price: hostel.price,
                 availableRooms: hostel.available_rooms,
                 thumbnail: hostel.thumbnail || "/placeholder.svg",
                 description: hostel.description || undefined,
                 ownerName: hostel.owner_name,
-                ownerContact: hostel.owner_contact
+                ownerContact: hostel.owner_contact,
+                roomTypes: hostel.roomTypes
               }} 
             />
           ))}
