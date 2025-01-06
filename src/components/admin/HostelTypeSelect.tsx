@@ -19,6 +19,11 @@ export const hostelTypes = [
 
 export type HostelType = (typeof hostelTypes)[number]
 
+const capitalizeFirstLetter = (str: string) => {
+  if (typeof str !== 'string' || !str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 export function HostelTypeSelect({ form }: { form: any }) {
   const selectedTypes = form.watch("roomTypes") || []
 
@@ -37,10 +42,6 @@ export function HostelTypeSelect({ form }: { form: any }) {
       form.setValue("roomTypes", [...currentTypes, type])
       form.setValue("roomPrices", { ...currentPrices, [type]: "0" })
     }
-  }
-
-  const capitalizeFirstLetter = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1)
   }
 
   return (

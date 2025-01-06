@@ -36,7 +36,19 @@ const ManageHostels = () => {
   };
 
   const handleEdit = (hostel: HostelUI) => {
-    setEditingHostel(hostel);
+    // Convert hostel data to form format
+    const formattedHostel = {
+      name: hostel.name,
+      description: hostel.description || "",
+      price: hostel.price,
+      ownerName: hostel.ownerName,
+      ownerContact: hostel.ownerContact,
+      roomTypes: hostel.roomTypes?.map(rt => rt.room_type) || [],
+      roomPrices: Object.fromEntries(
+        hostel.roomTypes?.map(rt => [rt.room_type, rt.price.toString()]) || []
+      )
+    };
+    setEditingHostel(formattedHostel as any);
     setShowForm(true);
   };
 
