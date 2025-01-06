@@ -20,7 +20,6 @@ export type Hostel = {
   roomTypes?: HostelRoomType[];
 }
 
-// Interface for the UI components that use camelCase
 export interface HostelUI {
   id: string;
   name: string;
@@ -33,7 +32,6 @@ export interface HostelUI {
   roomTypes?: HostelRoomType[];
 }
 
-// Utility function to convert database model to UI model
 export const toHostelUI = (hostel: Hostel): HostelUI => ({
   id: hostel.id,
   name: hostel.name,
@@ -46,7 +44,6 @@ export const toHostelUI = (hostel: Hostel): HostelUI => ({
   roomTypes: hostel.roomTypes,
 });
 
-// Utility function to convert UI model to database model
 export const toHostelDB = (hostel: HostelUI): Omit<Hostel, 'created_at' | 'updated_at' | 'roomTypes'> => ({
   id: hostel.id,
   name: hostel.name,

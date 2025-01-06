@@ -17,7 +17,6 @@ export function useHostelOperations() {
 
       if (hostelsError) throw hostelsError;
 
-      // Fetch room types for all hostels
       const { data: roomTypesData, error: roomTypesError } = await supabase
         .from("hostel_room_types")
         .select("*")
@@ -28,7 +27,6 @@ export function useHostelOperations() {
 
       if (roomTypesError) throw roomTypesError;
 
-      // Combine hostels with their room types and convert to UI model
       setHostels(
         hostelsData.map((hostel) => {
           const hostelWithRoomTypes = {
@@ -48,22 +46,24 @@ export function useHostelOperations() {
   };
 
   const uploadImage = async (file: File) => {
-    const fileExt = file.name.split(".").pop();
-    const filePath = `${crypto.randomUUID()}.${fileExt}`;
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("hostel_images")
-      .upload(filePath, file);
+      const { error: uploadError } = await supabase.storage
+        .from("hostel_images")
+        .upload(fileName, file);
 
-    if (uploadError) {
-      throw uploadError;
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from("hostel_images")
+        .getPublicUrl(fileName);
+
+      return data.publicUrl;
+    } catch (error: any) {
+      throw new Error(`Failed to upload image: ${error.message}`);
     }
-
-    const { data } = supabase.storage
-      .from("hostel_images")
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
   };
 
   const handleSubmit = async (
@@ -83,6 +83,7 @@ export function useHostelOperations() {
         price: parseFloat(values.price),
         owner_name: values.ownerName,
         owner_contact: values.ownerContact,
+        available_rooms: 0,
         ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
       };
 
@@ -97,7 +98,6 @@ export function useHostelOperations() {
         if (updateError) throw updateError;
         hostelId = editingHostel.id;
 
-        // Delete existing room types
         const { error: deleteError } = await supabase
           .from("hostel_room_types")
           .delete()
@@ -115,11 +115,10 @@ export function useHostelOperations() {
         hostelId = newHostel.id;
       }
 
-      // Insert new room types with prices
       const roomTypesData = values.roomTypes.map((type) => ({
         hostel_id: hostelId,
         room_type: type,
-        price: parseFloat(values.roomPrices[type]),
+        price: parseFloat(values.roomPrices[type] || "0"),
       }));
 
       const { error: roomTypesError } = await supabase

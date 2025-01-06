@@ -1,9 +1,9 @@
-import React from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -12,9 +12,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Textarea } from "@/components/ui/textarea"
-import { HostelTypeSelect, hostelTypes } from "./HostelTypeSelect"
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { HostelTypeSelect, hostelTypes } from "./HostelTypeSelect";
+import { ImageUpload } from "./ImageUpload";
+import { toast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -34,25 +36,27 @@ const formSchema = z.object({
     message: "Valid contact number is required.",
   }),
   description: z.string().optional(),
-})
+});
 
-export type HostelFormValues = z.infer<typeof formSchema>
+export type HostelFormValues = z.infer<typeof formSchema>;
 
 interface HostelFormProps {
   initialData?: {
-    name: string
-    price: string
-    roomTypes: typeof hostelTypes[number][]
-    roomPrices?: Record<string, string>
-    ownerName: string
-    ownerContact: string
-    description?: string
-  } | null
-  onSubmit: (values: HostelFormValues) => void
-  onCancel: () => void
+    name: string;
+    price: string;
+    roomTypes: typeof hostelTypes[number][];
+    roomPrices?: Record<string, string>;
+    ownerName: string;
+    ownerContact: string;
+    description?: string;
+  } | null;
+  onSubmit: (values: HostelFormValues, images: File[]) => void;
+  onCancel: () => void;
 }
 
 export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps) {
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+
   const form = useForm<HostelFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -64,11 +68,23 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
       ownerContact: initialData?.ownerContact || "",
       description: initialData?.description || "",
     },
-  })
+  });
+
+  const handleSubmit = (values: HostelFormValues) => {
+    if (selectedImages.length === 0 && !initialData) {
+      toast({
+        title: "Error",
+        description: "Please select at least one image",
+        variant: "destructive",
+      });
+      return;
+    }
+    onSubmit(values, selectedImages);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -152,6 +168,16 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
           )}
         />
 
+        <div className="space-y-4">
+          <FormLabel>Hostel Images</FormLabel>
+          <ImageUpload onImagesSelected={setSelectedImages} />
+          {selectedImages.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {selectedImages.length} image(s) selected
+            </p>
+          )}
+        </div>
+
         <div className="flex gap-4">
           <Button type="submit">
             {initialData ? "Update Hostel" : "Add Hostel"}
@@ -162,5 +188,5 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
         </div>
       </form>
     </Form>
-  )
+  );
 }

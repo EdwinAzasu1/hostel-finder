@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Container } from "@/components/ui/container";
-import { HostelCard } from "@/components/HostelCard";
 import SearchFilters from "@/components/SearchFilters";
+import { HostelCard } from "@/components/HostelCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
@@ -16,7 +15,6 @@ const Index = () => {
   const { data: hostels = [], isLoading } = useQuery({
     queryKey: ['hostels'],
     queryFn: async () => {
-      // Fetch hostels
       const { data: hostelsData, error: hostelsError } = await supabase
         .from('hostels')
         .select('*')
@@ -31,7 +29,6 @@ const Index = () => {
         return [];
       }
 
-      // Fetch room types for all hostels
       const { data: roomTypesData, error: roomTypesError } = await supabase
         .from('hostel_room_types')
         .select('*')
@@ -49,7 +46,6 @@ const Index = () => {
         return hostelsData.map(hostel => toHostelUI(hostel));
       }
 
-      // Combine hostels with their room types and convert to UI model
       return hostelsData.map((hostel) => {
         const hostelWithRoomTypes = {
           ...hostel,
@@ -61,34 +57,56 @@ const Index = () => {
   });
 
   return (
-    <Container>
-      <h1 className="text-4xl font-bold mb-4">Available Hostels</h1>
-      <SearchFilters />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            Available Hostels
+          </h1>
+          <Button 
+            onClick={() => setShowAdminLogin(true)}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            Admin Login
+          </Button>
+        </div>
+        
+        <div className="mb-8">
+          <SearchFilters />
+        </div>
+
         {isLoading ? (
-          <p>Loading...</p>
+          <div className="flex justify-center items-center min-h-[200px]">
+            <p className="text-lg text-muted-foreground">Loading...</p>
+          </div>
         ) : (
-          hostels.map((hostel) => (
-            <HostelCard key={hostel.id} hostel={hostel} />
-          ))
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hostels.map((hostel) => (
+              <HostelCard key={hostel.id} hostel={hostel} />
+            ))}
+          </div>
         )}
+
+        <AdminLoginModal 
+          isOpen={showAdminLogin} 
+          onClose={() => setShowAdminLogin(false)}
+          onLoginSuccess={() => {
+            toast({
+              title: "Success",
+              description: "Logged in as admin successfully",
+            });
+            window.location.href = "/admin";
+          }}
+          onLoginError={(message) => {
+            toast({
+              title: "Error",
+              description: message,
+              variant: "destructive",
+            });
+          }}
+        />
       </div>
-      <Button onClick={() => setShowAdminLogin(true)}>Admin Login</Button>
-      <AdminLoginModal 
-        isOpen={showAdminLogin} 
-        onClose={() => setShowAdminLogin(false)}
-        onLoginSuccess={() => {
-          // Handle successful login
-        }}
-        onLoginError={(message) => {
-          toast({
-            title: "Error",
-            description: message,
-            variant: "destructive",
-          });
-        }}
-      />
-    </Container>
+    </div>
   );
 };
 
