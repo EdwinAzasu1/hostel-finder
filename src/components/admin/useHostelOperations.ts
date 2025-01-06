@@ -1,27 +1,26 @@
-import { useState } from "react"
-import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/components/ui/use-toast"
-import type { HostelFormValues } from "./HostelForm"
-import type { Hostel, HostelRoomType } from "@/integrations/supabase/types/hostel"
-import { HostelType } from "./HostelTypeSelect"
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import type { HostelFormValues } from "./HostelForm";
+import { Hostel, HostelUI, toHostelUI } from "@/integrations/supabase/types/hostel";
 
 export function useHostelOperations() {
-  const [hostels, setHostels] = useState<Hostel[]>([])
-  const { toast } = useToast()
+  const [hostels, setHostels] = useState<HostelUI[]>([]);
+  const { toast } = useToast();
 
   const fetchHostels = async () => {
     const { data: hostelsData, error: hostelsError } = await supabase
       .from("hostels")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (hostelsError) {
       toast({
         title: "Error",
         description: "Failed to fetch hostels",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     // Fetch room types for all hostels
@@ -31,33 +30,28 @@ export function useHostelOperations() {
       .in(
         "hostel_id",
         hostelsData.map((h) => h.id)
-      )
+      );
 
     if (roomTypesError) {
       toast({
         title: "Error",
         description: "Failed to fetch room types",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    // Combine hostels with their room types
+    // Combine hostels with their room types and convert to UI model
     setHostels(
-      hostelsData.map((hostel) => ({
-        ...hostel,
-        price: hostel.price.toString(),
-        roomTypes: roomTypesData
-          .filter((rt) => rt.hostel_id === hostel.id)
-          .map((rt) => ({
-            ...rt,
-            room_type: rt.room_type as HostelType,
-          })),
-        ownerName: hostel.owner_name,
-        ownerContact: hostel.owner_contact,
-      }))
-    )
-  }
+      hostelsData.map((hostel) => {
+        const hostelWithRoomTypes = {
+          ...hostel,
+          roomTypes: roomTypesData.filter((rt) => rt.hostel_id === hostel.id),
+        };
+        return toHostelUI(hostelWithRoomTypes as Hostel);
+      })
+    );
+  };
 
   const uploadImage = async (file: File) => {
     const fileExt = file.name.split(".").pop()
@@ -81,12 +75,12 @@ export function useHostelOperations() {
   const handleSubmit = async (
     values: HostelFormValues,
     selectedImages: File[],
-    editingHostel: Hostel | null
+    editingHostel: HostelUI | null
   ) => {
     try {
-      let thumbnailUrl = null
+      let thumbnailUrl = null;
       if (selectedImages.length > 0) {
-        thumbnailUrl = await uploadImage(selectedImages[0])
+        thumbnailUrl = await uploadImage(selectedImages[0]);
       }
 
       const hostelData = {
@@ -96,35 +90,35 @@ export function useHostelOperations() {
         owner_name: values.ownerName,
         owner_contact: values.ownerContact,
         ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
-      }
+      };
 
-      let hostelId: string
+      let hostelId: string;
 
       if (editingHostel) {
         const { error: updateError } = await supabase
           .from("hostels")
           .update(hostelData)
-          .eq("id", editingHostel.id)
+          .eq("id", editingHostel.id);
 
-        if (updateError) throw updateError
-        hostelId = editingHostel.id
+        if (updateError) throw updateError;
+        hostelId = editingHostel.id;
 
         // Delete existing room types
         const { error: deleteError } = await supabase
           .from("hostel_room_types")
           .delete()
-          .eq("hostel_id", editingHostel.id)
+          .eq("hostel_id", editingHostel.id);
 
-        if (deleteError) throw deleteError
+        if (deleteError) throw deleteError;
       } else {
         const { data: newHostel, error: insertError } = await supabase
           .from("hostels")
           .insert([hostelData])
           .select()
-          .single()
+          .single();
 
-        if (insertError) throw insertError
-        hostelId = newHostel.id
+        if (insertError) throw insertError;
+        hostelId = newHostel.id;
       }
 
       // Insert new room types with prices
@@ -132,55 +126,55 @@ export function useHostelOperations() {
         hostel_id: hostelId,
         room_type: type,
         price: parseFloat(values.roomPrices[type]),
-      }))
+      }));
 
       const { error: roomTypesError } = await supabase
         .from("hostel_room_types")
-        .insert(roomTypesData)
+        .insert(roomTypesData);
 
-      if (roomTypesError) throw roomTypesError
+      if (roomTypesError) throw roomTypesError;
 
       toast({
         title: "Success",
         description: editingHostel
           ? "Hostel updated successfully"
           : "New hostel added successfully",
-      })
+      });
 
-      await fetchHostels()
-      return true
+      await fetchHostels();
+      return true;
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to save hostel",
         variant: "destructive",
-      })
-      return false
+      });
+      return false;
     }
-  }
+  };
 
   const deleteHostel = async (id: string) => {
     try {
-      const { error } = await supabase.from("hostels").delete().eq("id", id)
-      if (error) throw error
+      const { error } = await supabase.from("hostels").delete().eq("id", id);
+      if (error) throw error;
       toast({
         title: "Success",
         description: "Hostel deleted successfully",
-      })
-      await fetchHostels()
+      });
+      await fetchHostels();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete hostel",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   return {
     hostels,
     fetchHostels,
     handleSubmit,
     deleteHostel,
-  }
+  };
 }

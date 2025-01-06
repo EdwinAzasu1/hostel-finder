@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 import {
   Table,
   TableBody,
@@ -6,42 +6,31 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Edit, Trash2 } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { HostelType } from "./HostelTypeSelect"
-import { Badge } from "@/components/ui/badge"
-
-export interface Hostel {
-  id: string
-  name: string
-  price: string
-  roomTypes: HostelType[]
-  ownerName: string
-  ownerContact: string
-  description?: string
-  images?: File[]
-}
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { HostelUI } from "@/integrations/supabase/types/hostel";
 
 interface HostelListProps {
-  hostels: Hostel[]
-  onEdit: (hostel: Hostel) => void
-  onDelete: (id: string) => void
+  hostels: HostelUI[];
+  onEdit: (hostel: HostelUI) => void;
+  onDelete: (id: string) => void;
 }
 
 export function HostelList({ hostels, onEdit, onDelete }: HostelListProps) {
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this hostel?")) {
-      onDelete(id)
+      onDelete(id);
       toast({
         title: "Hostel deleted",
         description: "The hostel has been successfully deleted.",
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="rounded-md border">
@@ -62,9 +51,9 @@ export function HostelList({ hostels, onEdit, onDelete }: HostelListProps) {
               <TableCell className="font-medium">{hostel.name}</TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-1">
-                  {hostel.roomTypes.map((type) => (
-                    <Badge key={type} variant="secondary">
-                      {type}
+                  {hostel.roomTypes?.map((type) => (
+                    <Badge key={type.id} variant="secondary">
+                      {type.room_type}
                     </Badge>
                   ))}
                 </div>
@@ -95,5 +84,5 @@ export function HostelList({ hostels, onEdit, onDelete }: HostelListProps) {
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }

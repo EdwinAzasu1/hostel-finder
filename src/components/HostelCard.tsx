@@ -4,19 +4,10 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { HostelDetailsModal } from "./HostelDetailsModal";
 import { Eye } from "lucide-react";
+import { HostelUI } from "@/integrations/supabase/types/hostel";
 
 interface HostelCardProps {
-  hostel: {
-    id: number;
-    name: string;
-    price: string;
-    availableRooms: number;
-    thumbnail: string;
-    description?: string;
-    ownerName?: string;
-    ownerContact?: string;
-    roomTypes?: string[];
-  };
+  hostel: HostelUI;
 }
 
 export const HostelCard = ({ hostel }: HostelCardProps) => {
