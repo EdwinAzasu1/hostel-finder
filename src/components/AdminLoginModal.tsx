@@ -46,7 +46,7 @@ export const AdminLoginModal = ({
           .from('profiles')
           .select('is_admin')
           .eq('id', authData.user.id)
-          .maybeSingle();
+          .single();
 
         if (!existingProfile) {
           // Create profile if it doesn't exist

@@ -9,68 +9,62 @@ export function useHostelOperations() {
   const { toast } = useToast();
 
   const fetchHostels = async () => {
-    const { data: hostelsData, error: hostelsError } = await supabase
-      .from("hostels")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const { data: hostelsData, error: hostelsError } = await supabase
+        .from("hostels")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (hostelsError) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch hostels",
-        variant: "destructive",
-      });
-      return;
-    }
+      if (hostelsError) throw hostelsError;
 
-    // Fetch room types for all hostels
-    const { data: roomTypesData, error: roomTypesError } = await supabase
-      .from("hostel_room_types")
-      .select("*")
-      .in(
-        "hostel_id",
-        hostelsData.map((h) => h.id)
+      // Fetch room types for all hostels
+      const { data: roomTypesData, error: roomTypesError } = await supabase
+        .from("hostel_room_types")
+        .select("*")
+        .in(
+          "hostel_id",
+          hostelsData.map((h) => h.id)
+        );
+
+      if (roomTypesError) throw roomTypesError;
+
+      // Combine hostels with their room types and convert to UI model
+      setHostels(
+        hostelsData.map((hostel) => {
+          const hostelWithRoomTypes = {
+            ...hostel,
+            roomTypes: roomTypesData.filter((rt) => rt.hostel_id === hostel.id),
+          };
+          return toHostelUI(hostelWithRoomTypes as Hostel);
+        })
       );
-
-    if (roomTypesError) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to fetch room types",
+        description: error.message || "Failed to fetch hostels",
         variant: "destructive",
       });
-      return;
     }
-
-    // Combine hostels with their room types and convert to UI model
-    setHostels(
-      hostelsData.map((hostel) => {
-        const hostelWithRoomTypes = {
-          ...hostel,
-          roomTypes: roomTypesData.filter((rt) => rt.hostel_id === hostel.id),
-        };
-        return toHostelUI(hostelWithRoomTypes as Hostel);
-      })
-    );
   };
 
   const uploadImage = async (file: File) => {
-    const fileExt = file.name.split(".").pop()
-    const filePath = `${crypto.randomUUID()}.${fileExt}`
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from("hostel_images")
-      .upload(filePath, file)
+      .upload(filePath, file);
 
     if (uploadError) {
-      throw uploadError
+      throw uploadError;
     }
 
     const { data } = supabase.storage
       .from("hostel_images")
-      .getPublicUrl(filePath)
+      .getPublicUrl(filePath);
 
-    return data.publicUrl
-  }
+    return data.publicUrl;
+  };
 
   const handleSubmit = async (
     values: HostelFormValues,
@@ -143,10 +137,10 @@ export function useHostelOperations() {
 
       await fetchHostels();
       return true;
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to save hostel",
+        description: error.message || "Failed to save hostel",
         variant: "destructive",
       });
       return false;
@@ -162,10 +156,10 @@ export function useHostelOperations() {
         description: "Hostel deleted successfully",
       });
       await fetchHostels();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to delete hostel",
+        description: error.message || "Failed to delete hostel",
         variant: "destructive",
       });
     }
