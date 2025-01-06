@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Search, SlidersHorizontal } from "lucide-react";
 
 interface SearchFiltersProps {
-  onSearch: (query: string) => void;
-  onPriceRangeChange: (min: string, max: string) => void;
+  onSearch?: (query: string) => void;
+  onPriceRangeChange?: (min: string, max: string) => void;
 }
 
-const SearchFilters = ({ onSearch, onPriceRangeChange }: SearchFiltersProps) => {
+export default function SearchFilters({ onSearch, onPriceRangeChange }: SearchFiltersProps) {
   return (
     <div className="mb-8 space-y-4">
       <div className="relative">
@@ -16,7 +16,7 @@ const SearchFilters = ({ onSearch, onPriceRangeChange }: SearchFiltersProps) => 
         <Input
           placeholder="Search hostels..."
           className="pl-10"
-          onChange={(e) => onSearch(e.target.value)}
+          onChange={(e) => onSearch?.(e.target.value)}
         />
       </div>
       
@@ -26,7 +26,7 @@ const SearchFilters = ({ onSearch, onPriceRangeChange }: SearchFiltersProps) => 
           <Input
             type="number"
             placeholder="0"
-            onChange={(e) => onPriceRangeChange(e.target.value, '')}
+            onChange={(e) => onPriceRangeChange?.(e.target.value, '')}
           />
         </div>
         <div className="space-y-2">
@@ -34,7 +34,7 @@ const SearchFilters = ({ onSearch, onPriceRangeChange }: SearchFiltersProps) => 
           <Input
             type="number"
             placeholder="10000"
-            onChange={(e) => onPriceRangeChange('', e.target.value)}
+            onChange={(e) => onPriceRangeChange?.('', e.target.value)}
           />
         </div>
       </div>
@@ -45,6 +45,4 @@ const SearchFilters = ({ onSearch, onPriceRangeChange }: SearchFiltersProps) => 
       </Button>
     </div>
   );
-};
-
-export default SearchFilters;
+}

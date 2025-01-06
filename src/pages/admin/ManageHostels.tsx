@@ -1,97 +1,60 @@
-import React, { useState, useEffect } from "react"
-import { HostelForm } from "@/components/admin/HostelForm"
-import { ImageUpload } from "@/components/admin/ImageUpload"
-import { HostelList } from "@/components/admin/HostelList"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-import { useHostelOperations } from "@/components/admin/useHostelOperations"
-import { HostelUI } from "@/integrations/supabase/types/hostel"
+import { useState } from "react";
+import { HostelForm } from "@/components/admin/HostelForm";
+import { HostelList } from "@/components/admin/HostelList";
+import { useHostelOperations } from "@/components/admin/useHostelOperations";
+import { HostelUI } from "@/integrations/supabase/types/hostel";
 
-export default function ManageHostels() {
-  const [selectedImages, setSelectedImages] = useState<File[]>([])
-  const [editingHostel, setEditingHostel] = useState<HostelUI | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const { hostels, fetchHostels, handleSubmit, deleteHostel } =
-    useHostelOperations()
+const ManageHostels = () => {
+  const [showForm, setShowForm] = useState(false);
+  const [editingHostel, setEditingHostel] = useState<HostelUI | null>(null);
+  const { hostels, fetchHostels, handleSubmit, deleteHostel } = useHostelOperations();
 
-  useEffect(() => {
-    fetchHostels()
-  }, [])
+  const handleEdit = (hostel: HostelUI) => {
+    setEditingHostel(hostel);
+    setShowForm(true);
+  };
 
-  const handleImagesSelected = (files: File[]) => {
-    setSelectedImages(files)
-  }
+  const handleFormSubmit = async (values: any, selectedImages: File[]) => {
+    const success = await handleSubmit(values, selectedImages, editingHostel);
+    if (success) {
+      setShowForm(false);
+      setEditingHostel(null);
+    }
+  };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Manage Hostels</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEditingHostel(null)}>
-              <Plus className="mr-2 h-4 w-4" /> Add New Hostel
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {editingHostel ? "Edit Hostel" : "Add New Hostel"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 max-h-[80vh] overflow-y-auto">
-              <ImageUpload onImagesSelected={handleImagesSelected} />
-              {selectedImages.length > 0 && (
-                <div className="grid grid-cols-2 gap-2">
-                  {selectedImages.map((image, index) => (
-                    <div
-                      key={index}
-                      className="relative aspect-video rounded-lg overflow-hidden"
-                    >
-                      <img
-                        src={URL.createObjectURL(image)}
-                        alt={`Preview ${index + 1}`}
-                        className="object-cover w-full h-full"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-              <HostelForm
-                initialData={editingHostel}
-                onSubmit={async (values) => {
-                  const success = await handleSubmit(
-                    values,
-                    selectedImages,
-                    editingHostel
-                  )
-                  if (success) {
-                    setIsDialogOpen(false)
-                    setEditingHostel(null)
-                    setSelectedImages([])
-                  }
-                }}
-                onCancel={() => setIsDialogOpen(false)}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+    <div className="container mx-auto p-4 space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Manage Hostels</h1>
+        <button
+          onClick={() => {
+            setEditingHostel(null);
+            setShowForm(true);
+          }}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-md"
+        >
+          Add New Hostel
+        </button>
       </div>
 
-      <HostelList
-        hostels={hostels}
-        onEdit={(hostel) => {
-          setEditingHostel(hostel)
-          setIsDialogOpen(true)
-        }}
-        onDelete={deleteHostel}
-      />
+      {showForm ? (
+        <HostelForm
+          onSubmit={handleFormSubmit}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingHostel(null);
+          }}
+          initialData={editingHostel}
+        />
+      ) : (
+        <HostelList
+          hostels={hostels}
+          onEdit={handleEdit}
+          onDelete={deleteHostel}
+        />
+      )}
     </div>
-  )
-}
+  );
+};
+
+export default ManageHostels;

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Container } from "@/components/ui/container";
 import { HostelCard } from "@/components/HostelCard";
-import { SearchFilters } from "@/components/SearchFilters";
+import SearchFilters from "@/components/SearchFilters";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Hostel, HostelUI, toHostelUI } from "@/integrations/supabase/types/hostel";
+import { toHostelUI } from "@/integrations/supabase/types/hostel";
 
 const Index = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -55,7 +55,7 @@ const Index = () => {
           ...hostel,
           roomTypes: roomTypesData.filter((rt) => rt.hostel_id === hostel.id),
         };
-        return toHostelUI(hostelWithRoomTypes as Hostel);
+        return toHostelUI(hostelWithRoomTypes);
       });
     },
   });
@@ -74,7 +74,20 @@ const Index = () => {
         )}
       </div>
       <Button onClick={() => setShowAdminLogin(true)}>Admin Login</Button>
-      <AdminLoginModal open={showAdminLogin} onClose={() => setShowAdminLogin(false)} />
+      <AdminLoginModal 
+        isOpen={showAdminLogin} 
+        onClose={() => setShowAdminLogin(false)}
+        onLoginSuccess={() => {
+          // Handle successful login
+        }}
+        onLoginError={(message) => {
+          toast({
+            title: "Error",
+            description: message,
+            variant: "destructive",
+          });
+        }}
+      />
     </Container>
   );
 };
