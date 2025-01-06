@@ -9,7 +9,12 @@ interface ImageUploadProps {
 export function ImageUpload({ onImagesSelected }: ImageUploadProps) {
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      onImagesSelected(acceptedFiles)
+      // Validate file sizes
+      const validFiles = acceptedFiles.filter(file => file.size <= 5 * 1024 * 1024) // 5MB limit
+      if (validFiles.length < acceptedFiles.length) {
+        console.warn("Some files were skipped because they exceed the 5MB size limit")
+      }
+      onImagesSelected(validFiles)
     },
     [onImagesSelected]
   )
@@ -20,6 +25,7 @@ export function ImageUpload({ onImagesSelected }: ImageUploadProps) {
       "image/*": [".jpeg", ".jpg", ".png"],
     },
     multiple: true,
+    maxSize: 5 * 1024 * 1024, // 5MB
   })
 
   return (

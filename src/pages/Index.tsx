@@ -7,6 +7,7 @@ import { AdminLoginModal } from "@/components/AdminLoginModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toHostelUI } from "@/integrations/supabase/types/hostel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Index = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -60,9 +61,12 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Available Hostels
-          </h1>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Available Hostels
+            </h1>
+          </div>
           <Button 
             onClick={() => setShowAdminLogin(true)}
             className="bg-primary hover:bg-primary/90 text-primary-foreground"

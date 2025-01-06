@@ -1,98 +1,68 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { HostelForm } from "@/components/admin/HostelForm";
 import { HostelList } from "@/components/admin/HostelList";
 import { useHostelOperations } from "@/components/admin/useHostelOperations";
-import { HostelUI } from "@/integrations/supabase/types/hostel";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import type { HostelFormValues } from "@/components/admin/HostelForm";
+import type { HostelUI } from "@/integrations/supabase/types/hostel";
 
-const ManageHostels = () => {
+export default function ManageHostels() {
   const [showForm, setShowForm] = useState(false);
-  const [editingHostel, setEditingHostel] = useState<HostelUI | null>(null);
+  const [editingHostel, setEditingHostel] = useState<HostelFormValues | null>(null);
   const { hostels, fetchHostels, handleSubmit, deleteHostel } = useHostelOperations();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    checkAdminStatus();
-    fetchHostels();
-  }, []);
-
-  const checkAdminStatus = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate('/');
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', session.user.id)
-      .single();
-
-    if (!profile?.is_admin) {
-      navigate('/');
-    }
-  };
-
-  const handleEdit = (hostel: HostelUI) => {
-    // Convert hostel data to form format
-    const formattedHostel = {
-      name: hostel.name,
-      description: hostel.description || "",
-      price: hostel.price,
-      ownerName: hostel.ownerName,
-      ownerContact: hostel.ownerContact,
-      roomTypes: hostel.roomTypes?.map(rt => rt.room_type) || [],
-      roomPrices: Object.fromEntries(
-        hostel.roomTypes?.map(rt => [rt.room_type, rt.price.toString()]) || []
-      )
-    };
-    setEditingHostel(formattedHostel as any);
-    setShowForm(true);
-  };
-
-  const handleFormSubmit = async (values: any) => {
-    const success = await handleSubmit(values, [], editingHostel);
+  const handleFormSubmit = async (values: HostelFormValues, images: File[]) => {
+    const success = await handleSubmit(values, images, editingHostel as HostelUI);
     if (success) {
       setShowForm(false);
       setEditingHostel(null);
     }
   };
 
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingHostel(null);
+  };
+
+  const handleEdit = (hostel: HostelUI) => {
+    const formattedHostel: HostelFormValues = {
+      name: hostel.name,
+      price: hostel.price.toString(),
+      description: hostel.description || "",
+      ownerName: hostel.ownerName,
+      ownerContact: hostel.ownerContact,
+      roomTypes: hostel.roomTypes.map(rt => rt.room_type) as ("single" | "double" | "triple" | "quad" | "suite" | "apartment")[],
+      roomPrices: Object.fromEntries(
+        hostel.roomTypes.map(rt => [rt.room_type, rt.price.toString()])
+      ),
+    };
+    setEditingHostel(formattedHostel);
+    setShowForm(true);
+  };
+
   return (
-    <div className="container mx-auto p-4 space-y-4">
+    <div className="container mx-auto p-4 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Manage Hostels</h1>
-        <button
-          onClick={() => {
-            setEditingHostel(null);
-            setShowForm(true);
-          }}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-md"
-        >
-          Add New Hostel
-        </button>
+        <h1 className="text-3xl font-bold">Manage Hostels</h1>
+        {!showForm && (
+          <Button onClick={() => setShowForm(true)}>Add New Hostel</Button>
+        )}
       </div>
 
       {showForm ? (
         <HostelForm
-          onSubmit={handleFormSubmit}
-          onCancel={() => {
-            setShowForm(false);
-            setEditingHostel(null);
-          }}
           initialData={editingHostel}
+          onSubmit={handleFormSubmit}
+          onCancel={handleCancel}
         />
       ) : (
         <HostelList
           hostels={hostels}
           onEdit={handleEdit}
           onDelete={deleteHostel}
+          onRefresh={fetchHostels}
         />
       )}
     </div>
   );
-};
-
-export default ManageHostels;
+}
