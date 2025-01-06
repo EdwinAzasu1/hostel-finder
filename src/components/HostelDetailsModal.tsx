@@ -5,6 +5,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { HostelRoomType } from "@/integrations/supabase/types/hostel";
 
 interface HostelDetailsModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ interface HostelDetailsModalProps {
     description?: string;
     ownerName?: string;
     ownerContact?: string;
-    roomTypes?: string[];
+    roomTypes?: HostelRoomType[];
   };
 }
 
@@ -43,7 +44,7 @@ export const HostelDetailsModal = ({
           <div className="grid gap-4">
             <div className="flex justify-between items-center">
               <p className="text-2xl font-bold text-primary">
-                GH₵ {hostel.price}
+                Starting from GH₵ {hostel.price}
                 <span className="text-sm text-muted-foreground">/year</span>
               </p>
               <Badge variant="secondary" className="text-base px-4 py-1">
@@ -59,11 +60,19 @@ export const HostelDetailsModal = ({
             {hostel.roomTypes && hostel.roomTypes.length > 0 && (
               <div>
                 <h3 className="font-semibold mb-2">Available Room Types</h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid gap-2">
                   {hostel.roomTypes.map((type) => (
-                    <Badge key={type} variant="outline">
-                      {type}
-                    </Badge>
+                    <div
+                      key={type.id}
+                      className="flex justify-between items-center p-3 bg-muted rounded-lg"
+                    >
+                      <Badge variant="outline" className="text-base">
+                        {type.room_type}
+                      </Badge>
+                      <span className="font-semibold">
+                        GH₵ {type.price.toLocaleString()}/year
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>

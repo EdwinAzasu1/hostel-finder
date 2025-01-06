@@ -14,18 +14,21 @@ export type Database = {
           created_at: string
           hostel_id: string | null
           id: string
+          price: number
           room_type: string
         }
         Insert: {
           created_at?: string
           hostel_id?: string | null
           id?: string
+          price?: number
           room_type: string
         }
         Update: {
           created_at?: string
           hostel_id?: string | null
           id?: string
+          price?: number
           room_type?: string
         }
         Relationships: [

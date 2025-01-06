@@ -2,11 +2,11 @@ import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import type { HostelFormValues } from "./HostelForm"
-import type { Hostel } from "@/integrations/supabase/types"
+import type { Hostel, HostelRoomType } from "@/integrations/supabase/types/hostel"
 import { HostelType } from "./HostelTypeSelect"
 
 export function useHostelOperations() {
-  const [hostels, setHostels] = useState<(Hostel & { roomTypes: HostelType[] })[]>([])
+  const [hostels, setHostels] = useState<Hostel[]>([])
   const { toast } = useToast()
 
   const fetchHostels = async () => {
@@ -49,7 +49,10 @@ export function useHostelOperations() {
         price: hostel.price.toString(),
         roomTypes: roomTypesData
           .filter((rt) => rt.hostel_id === hostel.id)
-          .map((rt) => rt.room_type as HostelType),
+          .map((rt) => ({
+            ...rt,
+            room_type: rt.room_type as HostelType,
+          })),
         ownerName: hostel.owner_name,
         ownerContact: hostel.owner_contact,
       }))
@@ -78,7 +81,7 @@ export function useHostelOperations() {
   const handleSubmit = async (
     values: HostelFormValues,
     selectedImages: File[],
-    editingHostel: (Hostel & { roomTypes: HostelType[] }) | null
+    editingHostel: Hostel | null
   ) => {
     try {
       let thumbnailUrl = null
@@ -124,10 +127,11 @@ export function useHostelOperations() {
         hostelId = newHostel.id
       }
 
-      // Insert new room types
+      // Insert new room types with prices
       const roomTypesData = values.roomTypes.map((type) => ({
         hostel_id: hostelId,
         room_type: type,
+        price: parseFloat(values.roomPrices[type]),
       }))
 
       const { error: roomTypesError } = await supabase

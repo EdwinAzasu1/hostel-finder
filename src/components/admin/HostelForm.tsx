@@ -21,11 +21,12 @@ const formSchema = z.object({
     message: "Hostel name must be at least 2 characters.",
   }),
   price: z.string().min(1, {
-    message: "Price is required.",
+    message: "Base price is required.",
   }),
   roomTypes: z.array(z.enum(hostelTypes)).min(1, {
     message: "Select at least one room type.",
   }),
+  roomPrices: z.record(z.string().min(1, "Price is required for each room type")),
   ownerName: z.string().min(2, {
     message: "Owner name is required.",
   }),
@@ -42,6 +43,7 @@ interface HostelFormProps {
     name: string
     price: string
     roomTypes: typeof hostelTypes[number][]
+    roomPrices?: Record<string, string>
     ownerName: string
     ownerContact: string
     description?: string
@@ -57,6 +59,7 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
       name: initialData?.name || "",
       price: initialData?.price || "",
       roomTypes: initialData?.roomTypes || [],
+      roomPrices: initialData?.roomPrices || {},
       ownerName: initialData?.ownerName || "",
       ownerContact: initialData?.ownerContact || "",
       description: initialData?.description || "",
@@ -85,16 +88,16 @@ export function HostelForm({ initialData, onSubmit, onCancel }: HostelFormProps)
           name="price"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Price (GH₵)</FormLabel>
+              <FormLabel>Base Price (GH₵)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="Enter price per academic year"
+                  placeholder="Enter base price per academic year"
                   {...field}
                 />
               </FormControl>
               <FormDescription>
-                Price per academic year in Ghana Cedis
+                Base price per academic year in Ghana Cedis
               </FormDescription>
               <FormMessage />
             </FormItem>
