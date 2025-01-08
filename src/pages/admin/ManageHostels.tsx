@@ -8,11 +8,11 @@ import type { HostelUI } from "@/integrations/supabase/types/hostel";
 
 export default function ManageHostels() {
   const [showForm, setShowForm] = useState(false);
-  const [editingHostel, setEditingHostel] = useState<HostelFormValues | null>(null);
+  const [editingHostel, setEditingHostel] = useState<HostelUI | null>(null);
   const { hostels, fetchHostels, handleSubmit, deleteHostel } = useHostelOperations();
 
   const handleFormSubmit = async (values: HostelFormValues, images: File[]) => {
-    const success = await handleSubmit(values, images, editingHostel as HostelUI);
+    const success = await handleSubmit(values, images, editingHostel);
     if (success) {
       setShowForm(false);
       setEditingHostel(null);
@@ -27,16 +27,16 @@ export default function ManageHostels() {
   const handleEdit = (hostel: HostelUI) => {
     const formattedHostel: HostelFormValues = {
       name: hostel.name,
-      price: hostel.price.toString(),
+      price: hostel.price,
       description: hostel.description || "",
       ownerName: hostel.ownerName,
       ownerContact: hostel.ownerContact,
-      roomTypes: hostel.roomTypes.map(rt => rt.room_type) as ("single" | "double" | "triple" | "quad" | "suite" | "apartment")[],
+      roomTypes: hostel.roomTypes?.map(rt => rt.room_type) as ("single" | "double" | "triple" | "quad" | "suite" | "apartment")[],
       roomPrices: Object.fromEntries(
-        hostel.roomTypes.map(rt => [rt.room_type, rt.price.toString()])
+        hostel.roomTypes?.map(rt => [rt.room_type, rt.price.toString()]) || []
       ),
     };
-    setEditingHostel(formattedHostel);
+    setEditingHostel(hostel);
     setShowForm(true);
   };
 
@@ -51,7 +51,17 @@ export default function ManageHostels() {
 
       {showForm ? (
         <HostelForm
-          initialData={editingHostel}
+          initialData={editingHostel ? {
+            name: editingHostel.name,
+            price: editingHostel.price,
+            description: editingHostel.description,
+            ownerName: editingHostel.ownerName,
+            ownerContact: editingHostel.ownerContact,
+            roomTypes: editingHostel.roomTypes?.map(rt => rt.room_type) as ("single" | "double" | "triple" | "quad" | "suite" | "apartment")[],
+            roomPrices: Object.fromEntries(
+              editingHostel.roomTypes?.map(rt => [rt.room_type, rt.price.toString()]) || []
+            ),
+          } : null}
           onSubmit={handleFormSubmit}
           onCancel={handleCancel}
         />
@@ -60,7 +70,6 @@ export default function ManageHostels() {
           hostels={hostels}
           onEdit={handleEdit}
           onDelete={deleteHostel}
-          onRefresh={fetchHostels}
         />
       )}
     </div>
