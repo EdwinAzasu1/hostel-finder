@@ -53,7 +53,7 @@
 
   .dark {
     --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --foreground: 210 40% 98%;  /* Adjusted for better contrast in dark mode */
 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
@@ -68,7 +68,7 @@
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted-foreground: 215 20.2% 75.1%; /* Lightened for better visibility */
 
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
