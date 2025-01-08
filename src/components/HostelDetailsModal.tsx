@@ -5,6 +5,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { HostelRoomType } from "@/integrations/supabase/types/hostel";
 
 interface HostelDetailsModalProps {
@@ -27,13 +30,47 @@ export const HostelDetailsModal = ({
   onClose,
   hostel,
 }: HostelDetailsModalProps) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      if (contentRef.current) {
+        const { scrollHeight, clientHeight, scrollTop } = contentRef.current;
+        setShowScrollButton(scrollHeight > clientHeight && scrollTop < scrollHeight - clientHeight);
+      }
+    };
+
+    const content = contentRef.current;
+    if (content) {
+      content.addEventListener('scroll', checkScroll);
+      // Initial check
+      checkScroll();
+    }
+
+    return () => {
+      if (content) {
+        content.removeEventListener('scroll', checkScroll);
+      }
+    };
+  }, [isOpen]);
+
+  const scrollToBottom = () => {
+    if (contentRef.current) {
+      contentRef.current.scrollTo({
+        top: contentRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{hostel.name}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-6">
+        <div ref={contentRef} className="grid gap-6 overflow-y-auto pr-2">
           <div className="aspect-video relative overflow-hidden rounded-lg">
             <img
               src={hostel.thumbnail || "/placeholder.svg"}
@@ -92,6 +129,16 @@ export const HostelDetailsModal = ({
             </div>
           </div>
         </div>
+        {showScrollButton && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute bottom-4 right-4 rounded-full"
+            onClick={scrollToBottom}
+          >
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
   );
